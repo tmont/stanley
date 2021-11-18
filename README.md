@@ -19,6 +19,7 @@ A bunch of HTML pages will be generated in `./dist/`.
 - Uptime "9s"!
   - with color bars and gradients!
 - Huge icons indicating status!
+- Atom feed!
 - It's just one giant Bash script?
   - Yes!
   - Why not!
