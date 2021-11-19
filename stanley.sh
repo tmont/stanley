@@ -1423,32 +1423,20 @@ EOF
 
 		echo "${layoutHtml}" > "${urlFile}"
 
-		local items
-		items=$(fetch "
+		local mostRecentOk
+		mostRecentOk=$(fetch "
 select
-	ok,
-	sent_at,
-	time_elapsed_ms,
-	expected_status_code,
-	actual_status_code,
-	remote_ip,
-	remote_port
+	ok
 from check_result
 where url_check_id=${checkId}
 order by sent_at desc
-limit 100;")
-
-		local mostRecentItem
-		mostRecentItem=$(echo "${items}" | head -n 1)
+limit 1")
 
 		local icon="${checkmarkCircle}"
-		local ok=1
 		local text="UP"
 		local textCls="text-ok"
 
-		ok=$(echo "${mostRecentItem}" | cut -f1)
-
-		if [[ "${ok}" != "1" ]]; then
+		if [[ "${mostRecentOk}" != "1" ]]; then
 			icon="${timesCircle}"
 			text="DOWN"
 			textCls="text-not-ok"
