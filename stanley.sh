@@ -1470,7 +1470,7 @@ $(generateChartTabs "and url_check_id = ${checkId}")
 		</tr>
 	</thead>
 	<tbody>
-		$(generateCheckItemRowsFor "where url_check_id = ${checkId} order by sent_at desc limit 500")
+		$(generateCheckItemRowsFor "where url_check_id = ${checkId} order by sent_at desc limit 100")
 	</tbody>
 </table>"
 
