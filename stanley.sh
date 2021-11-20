@@ -1016,11 +1016,11 @@ from (
 			where="${where} and "
 		fi
 
-		generateUptimeLine 'Last hour' "${where} sent_at > datetime('now', '-1 hour')"
-		generateUptimeLine 'Last 24 hours' "${where} sent_at > datetime('now', '-24 hour')"
-		generateUptimeLine 'Last 7 days' "${where} sent_at > datetime('now', '-7 day')"
-		generateUptimeLine 'Last 30 days' "${where} sent_at > datetime('now', '-30 day')"
-		generateUptimeLine 'Last year' "${where} sent_at > datetime('now', '-1 year')"
+		generateUptimeLine 'Last hour' "${where} sent_at > strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now', '-1 hour'))"
+		generateUptimeLine 'Last 24 hours' "${where} sent_at > strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now', '-24 hour'))"
+		generateUptimeLine 'Last 7 days' "${where} sent_at > strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now', '-7 day'))"
+		generateUptimeLine 'Last 30 days' "${where} sent_at > strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now', '-30 day'))"
+		generateUptimeLine 'Last year' "${where} sent_at > strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now', '-1 year'))"
 		generateUptimeLine 'All time' "$1"
 
 		echo '</table>'
