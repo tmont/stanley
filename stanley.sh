@@ -1169,9 +1169,9 @@ bar_svg as (
 	        end as svg_max,
 		case when ok = 0
             then '<polygon class="not-ok-event" fill="red" stroke="black" points="' ||
-                 (xStart - 10) || ',' || (chart_offset_y - 20) || ' ' ||
-                 (xStart + 10) || ',' || (chart_offset_y - 20) || ' ' ||
-                 xStart || ',' || (chart_offset_y - 5) ||
+                 (xStart + (bar_width / 2) - 10) || ',' || (chart_offset_y - 20) || ' ' ||
+                 (xStart + (bar_width / 2) + 10) || ',' || (chart_offset_y - 20) || ' ' ||
+                 (xStart + (bar_width / 2)) || ',' || (chart_offset_y - 5) ||
                 '" />'
             else ''
             end as svg_ok_event,
