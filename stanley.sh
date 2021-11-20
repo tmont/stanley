@@ -922,7 +922,7 @@ select
 	'</tr>'
 	as html
 from check_result
-$1"
+$1" "check items"
 	}
 
 	uptimeRowsQuery() {
@@ -994,10 +994,10 @@ select
     '></div>' as html
 from (
 	$(uptimeRowsQuery "$2")
-)"
+)" "uptime line html"
 
 		local uptimePctTotal
-		uptimePctTotal=$(fetch "select round(sum(pct), 4) as pct from ($(uptimeRowsQuery "$2")) where ok=1")
+		uptimePctTotal=$(fetch "select round(sum(pct), 4) as pct from ($(uptimeRowsQuery "$2")) where ok=1" "pct total uptime")
 
 		echo "</td>"
 		echo "<td><span class=\"uptime-pct\">${uptimePctTotal}%</span></td>"
@@ -1106,19 +1106,38 @@ box as (
 ),
 time_info as (
 	select
-		time_list.time                              as time,
-		row_number() over (order by time_list.time) as row_num,
-		min(ok)                                     as ok,
-		avg(time_elapsed_ms)                        as elapsed_ms_avg,
-		max(time_elapsed_ms)                        as elapsed_ms_max,
-		min(time_elapsed_ms)                        as elapsed_ms_min,
-		count(*)                                    as count
-	from time_list, chart, box, chart_info
-	left outer join check_result
-		on (strftime('%s', sent_at) - (strftime('%s', sent_at) % chart_info.interval)) = time_list.time
-		$2
-	group by 1
-	order by 1
+        time,
+		row_number() over (order by time) as row_num,
+        max(ok) as ok,
+        max(elapsed_ms_avg) as elapsed_ms_avg,
+        max(elapsed_ms_max) as elapsed_ms_max,
+        max(elapsed_ms_min) as elapsed_ms_min,
+        max(count) as count
+    from (
+	    select
+		    time_list.time       as time,
+		    min(ok)              as ok,
+		    avg(time_elapsed_ms) as elapsed_ms_avg,
+		    max(time_elapsed_ms) as elapsed_ms_max,
+		    min(time_elapsed_ms) as elapsed_ms_min,
+		    count(*)             as count
+	    from time_list, chart_info
+		inner join check_result
+			on (strftime('%s', sent_at) - (strftime('%s', sent_at) % chart_info.interval)) = time_list.time
+			$2
+	    group by 1
+	    union all
+	    select
+		    time,
+		    null as ok,
+		    null as elapsed_ms_avg,
+		    null as elapsed_ms_max,
+		    null as elapsed_ms_min,
+		    0    as count
+	    from time_list
+    )
+    group by 1
+    order by 1
 ),
 y_axis as (
     select
@@ -1208,7 +1227,7 @@ select
 	'</svg>' as svg
 from bar_svg, box, chart, y_axis, x_axis
 EOF
-		)"
+		)" "chart svg"
 		echo "</div>"
 	}
 
@@ -1283,7 +1302,7 @@ from (
 		on u.id = results.url_check_id
 	where ok != prevOk
     order by time desc
-)"
+)" "feed xml"
 	}
 
 	generateOverviewContent() {
@@ -1293,8 +1312,8 @@ from (
 		local text="OK"
 		local textCls="text-ok"
 
-		numUp=$(fetch "select count(*) from check_result where ok = 1 and exec_id = ${checkExecId}")
-		numDown=$(fetch "select count(*) from check_result where ok = 0 and exec_id = ${checkExecId}")
+		numUp=$(fetch "select count(*) from check_result where ok = 1 and exec_id = ${checkExecId}" "count ok=1")
+		numDown=$(fetch "select count(*) from check_result where ok = 0 and exec_id = ${checkExecId}" "count ok=0")
 
 		if [[ "${numDown}" -gt 0 ]]; then
 			icon="${timesCircle}"
@@ -1373,14 +1392,16 @@ EOF
 	}
 
 	fetch() {
+#		local start=$(getMillis)
 		sqlite3 -separator $'\t' "${dbFile}" "$1"
+#		errcho "[$2]: query finished in $(($(getMillis) - start))ms"
 	}
 
 	# generate overview html page
 	local indexFile="${outputDir}/index.html"
 
 	local checks
-	checks=$(fetch "select id, name from url_check order by id")
+	checks=$(fetch "select id, name from url_check order by id" "url_checks")
 
 	local start
 	start=$(getMillis)
@@ -1430,7 +1451,7 @@ select
 from check_result
 where url_check_id=${checkId}
 order by sent_at desc
-limit 1")
+limit 1" "most recent ok")
 
 		local icon="${checkmarkCircle}"
 		local text="UP"
