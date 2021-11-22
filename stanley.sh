@@ -970,6 +970,40 @@ WINDOW
 	win2 AS (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)"
 	}
 
+	getOkElapsedTotal() {
+	    local result
+
+	    result=$(fetch "
+select
+    case
+	     when elapsed_d > 2
+		     then round(elapsed_d, 2) || 'd'
+	     when elapsed_h > 2
+		     then round(elapsed_h, 2) || 'h'
+	     when elapsed_m > 2
+		     then round(elapsed_m, 2) || 'm'
+        else round(elapsed_s, 2) || 's'
+    end as txt
+from (
+    select
+        ok,
+        sum(elapsed_d) as elapsed_d,
+        sum(elapsed_h) as elapsed_h,
+        sum(elapsed_m) as elapsed_m,
+        sum(elapsed_s) as elapsed_s
+    from (
+        $(uptimeRowsQuery "$1")
+    )
+    where ok=$2
+)")
+
+        if [[ -z "${result}" ]]; then
+            result="0s"
+        fi
+
+        echo "${result}"
+	}
+
 	generateUptimeLine() {
 		echo '<tr>'
 		echo "<th>$1</th>"
@@ -997,18 +1031,25 @@ from (
 )" "uptime line html"
 
 		local uptimePctTotal
+		local uptimeTotal
+		local downtimeTotal
 		uptimePctTotal=$(fetch "select round(sum(pct), 4) as pct from ($(uptimeRowsQuery "$2")) where ok=1" "pct total uptime")
+		uptimeTotal=$(getOkElapsedTotal "$2" 1)
+		downtimeTotal=$(getOkElapsedTotal "$2" 0)
 
-		echo "</td>"
+		echo "</div></td>"
 		echo "<td><span class=\"uptime-pct\">${uptimePctTotal}%</span></td>"
+		echo "<td><span class=\"uptime-pct\"><span class=\"text-ok\">&uarr;${uptimeTotal}</span></span></td>"
+		echo "<td><span class=\"uptime-pct\"><span class=\"text-not-ok\">&darr;${downtimeTotal}</span></span></td>"
 		echo "</tr>"
 	}
 
 	generateUptimeLines() {
 		local where=$1
+		local col='<col style="width: 6rem" />'
 
 		echo '<table class="uptime-group">'
-		echo '<colgroup><col style="width: 10rem" /><col /><col style="width: 10rem" /></colgroup>'
+		echo "<colgroup><col style=\"width: 10rem\" /><col />${col}${col}${col}</colgroup>"
 
 		if [[ -z "${where}" ]]; then
 			where="where "
