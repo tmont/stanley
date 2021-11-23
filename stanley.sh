@@ -986,7 +986,6 @@ select
     end as txt
 from (
     select
-        ok,
         sum(elapsed_d) as elapsed_d,
         sum(elapsed_h) as elapsed_h,
         sum(elapsed_m) as elapsed_m,
