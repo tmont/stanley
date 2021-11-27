@@ -1317,8 +1317,8 @@ from (
 	    '<entry>' ||
 	        '<title>' || name || ' is ' || (case when ok = 1 then 'up' else 'down' end) || '</title>' ||
 	        '<link rel=\"alternate\" href=\"' || url || '\" />' ||
-	        '<published>' || strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now')) || '</published>' ||
-	        '<updated>' || time || '</updated>' ||
+	        '<published>' || time || '</published>' ||
+	        '<updated>' || strftime('%Y-%m-%dT%H:%M:%S+00:00', datetime('now')) || '</updated>' ||
 	        '<id>' || u.id || '-' || time || '</id>' ||
 	        '<content type=\"text\">The uptime status of ' || name || ' (' || url || ') has changed. Visit $2/check-' || id || '.html for more details.' || '</content>' ||
 	    '</entry>' as entry_xml
@@ -1336,7 +1336,7 @@ from (
 			from check_result
 			group by url_check_id, time
 		) data
-			WINDOW win AS (ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+			WINDOW win AS (partition by url_check_id ORDER BY time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
 	) results
 	inner join url_check u
 		on u.id = results.url_check_id
